@@ -1,0 +1,1 @@
+function smptech:machine_for_piglins/tick

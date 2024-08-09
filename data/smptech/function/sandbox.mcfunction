@@ -1,0 +1,5 @@
+playsound minecraft:particle.soul_escape
+playsound minecraft:particle.soul_escape
+playsound minecraft:particle.soul_escape
+playsound minecraft:particle.soul_escape
+playsound minecraft:particle.soul_escape
