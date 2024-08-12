@@ -13,6 +13,11 @@ scoreboard objectives remove smptech.machine_for_piglins.player_chose_evil
 scoreboard objectives add smptech.machine_for_piglins.player_chose_evil trigger
 scoreboard players reset @a smptech.machine_for_piglins.player_chose_evil
 
-scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.player_chose_good
+# Initialize trigger for tracking item uses
+scoreboard objectives remove smptech.machine_for_piglins.jigsaw_used
+scoreboard objectives add smptech.machine_for_piglins.jigsaw_used minecraft.used:minecraft.jigsaw
+scoreboard players set @a smptech.machine_for_piglins.jigsaw_used 0
+
+scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.jigsaw_used
 
 say Reset Machine for Piglins component!

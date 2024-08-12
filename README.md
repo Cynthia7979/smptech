@@ -3,4 +3,6 @@
 
 **Components (sub-packs):** `machine_for_piglins`
 
-Requires the SMPack resource pack.
+Requires the SMPack resource pack. (See branch `resourcepack/dev`)
+
+Relevant Custom Model Data: Check README in `resourcepack/dev`
