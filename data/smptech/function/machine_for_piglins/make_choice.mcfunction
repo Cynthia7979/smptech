@@ -1,3 +1,4 @@
+tag @s remove smptech.machine_for_piglins.choice_pending
 # Allow the current player to make choice
 scoreboard players enable @s smptech.machine_for_piglins.player_chose_good
 scoreboard players enable @s smptech.machine_for_piglins.player_chose_evil

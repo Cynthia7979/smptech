@@ -1,9 +1,3 @@
-# Initialize scoreboard for keeping track of players who need to make choice
-# Scores of players who participated in the event have to be manually set to 1
-scoreboard objectives remove smptech.machine_for_piglins.choice_pending
-scoreboard objectives add smptech.machine_for_piglins.choice_pending dummy
-scoreboard players set @a smptech.machine_for_piglins.choice_pending 0
-
 # Initialize trigger for recording who chose what (so they won't trigger both by clicking both options)
 # Does not have to be manually reset
 scoreboard objectives remove smptech.machine_for_piglins.player_chose_good
@@ -13,11 +7,16 @@ scoreboard objectives remove smptech.machine_for_piglins.player_chose_evil
 scoreboard objectives add smptech.machine_for_piglins.player_chose_evil trigger
 scoreboard players reset @a smptech.machine_for_piglins.player_chose_evil
 
-# Initialize trigger for tracking item uses
+# Initialize listener for tracking item uses
 scoreboard objectives remove smptech.machine_for_piglins.jigsaw_used
 scoreboard objectives add smptech.machine_for_piglins.jigsaw_used minecraft.used:minecraft.jigsaw
 scoreboard players set @a smptech.machine_for_piglins.jigsaw_used 0
 
-scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.jigsaw_used
+# Initialize listener for detecting player deaths
+scoreboard objectives remove smptech.machine_for_piglins.recent_death
+scoreboard objectives add smptech.machine_for_piglins.recent_death deathCount
+scoreboard players set @a smptech.machine_for_piglins.recent_death 0
+
+scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.recent_death
 
 say Reset Machine for Piglins component!
