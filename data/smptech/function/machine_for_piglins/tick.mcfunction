@@ -8,6 +8,7 @@ execute as @a[scores={smptech.machine_for_piglins.player_chose_evil=1}] run func
 
 # TODO: Sound Design
 
+# TODO: Change this to advancement based to reduce execute as @a every tick
 # Check if each online player has eaten a Jigsaw Block (Foul Sausage)
 execute as @a[scores={smptech.machine_for_piglins.jigsaw_used=1..}] run function smptech:machine_for_piglins/on_consume_sausage
 

@@ -17,6 +17,9 @@ scoreboard objectives remove smptech.machine_for_piglins.recent_death
 scoreboard objectives add smptech.machine_for_piglins.recent_death deathCount
 scoreboard players set @a smptech.machine_for_piglins.recent_death 0
 
+# Reset internal bookkeeping information
+advancement revoke @a only smptech:machine_for_piglins/hit_pig_adjacent
+
 scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.recent_death
 
 say Reset Machine for Piglins component!
