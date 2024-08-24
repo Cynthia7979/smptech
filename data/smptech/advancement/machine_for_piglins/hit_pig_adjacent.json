@@ -21,19 +21,8 @@
           ],
           "entity": [
             {
-              "condition": "minecraft:entity_properties",
-              "entity": "this",
-              "predicate": {
-                "type": [
-                  "minecraft:pig",
-                  "minecraft:piglin",
-                  "minecraft:piglin_brute",
-                  "minecraft:zombified_piglin",
-                  "minecraft:hoglin",
-                  "minecraft:zoglin",
-                  "minecraft:creeper"
-                ]
-              }
+              "condition": "minecraft:reference",
+              "name": "smptech:machine_for_piglins/is_pig_adjacent"
             }
           ]
         }
