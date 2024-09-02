@@ -9,3 +9,6 @@ execute as @e[type=item,nbt={Item:{components:{"minecraft:custom_data":{smptech.
 # Same thing but for the good side
 execute if entity @e[type=item,nbt={Item:{components:{"minecraft:custom_data":{smptech.machine_for_piglins.is_good_item:1}}}}] as @s[tag=smptech.machine_for_piglins.good] run function smptech:machine_for_piglins/give_good_item
 execute as @e[type=item,nbt={Item:{components:{"minecraft:custom_data":{smptech.machine_for_piglins.is_good_item:1}}}},limit=1] run kill
+
+# Special check to remove manpig tag on death
+tag @s remove smptech.machine_for_piglins.manpig

@@ -6,6 +6,7 @@
 - Internal player tags:
     - `smptech.machine_for_piglins.evil`
     - `smptech.machine_for_piglins.good`
+    - `smptech.machine_for_piglins.manpig`
 
 Requires the SMPack resource pack. (See branch `resourcepack/dev`)
 
