@@ -1,1 +1,2 @@
+function smptech:super_smackers/tick
 function smptech:machine_for_piglins/tick

@@ -1,0 +1,1 @@
+execute as @a if score @s smptech.super_smackers.smacker_eaten matches 1.. run function smptech:super_smackers/do_eat_check

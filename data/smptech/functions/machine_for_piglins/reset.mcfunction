@@ -22,4 +22,10 @@ advancement revoke @a only smptech:machine_for_piglins/hit_pig_adjacent
 
 scoreboard objectives setdisplay sidebar smptech.machine_for_piglins.recent_death
 
-say Reset Machine for Piglins component!
+# Reset all player tags. They will need to be added back manually.
+tag @a remove smptech.machine_for_piglins.choice_pending
+tag @a remove smptech.machine_for_piglins.evil
+tag @a remove smptech.machine_for_piglins.good
+tag @a remove smptech.machine_for_piglins.manpig
+
+say Fully reset Machine for Piglins component!

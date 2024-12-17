@@ -1,0 +1,3 @@
+tellraw @a[tag=smptech.super_smackers.awaiting_eat_half_p3] [{"text":"Stop waiting now. It's not coming back. Here, have some cake crumbs for your troubles.","color":"yellow"}]
+give @a[tag=smptech.super_smackers.awaiting_eat_half_p3] minecraft:cookie{display:{Name:'{"text":"Crumbs of the Snackinator","color":"dark_aqua"}',Lore:['{"text":"What remains of the Super Smackinator, a weapon wielded only by the true Smackers.","color":"dark_purple","italic":false}','{"text":" "}','{"text":"What have you done?","color":"dark_gray","italic":true}']},Enchantments:[{}]} 64
+tag @a[tag=smptech.super_smackers.awaiting_eat_half_p3] remove smptech.super_smackers.awaiting_eat_half_p3
