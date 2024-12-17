@@ -9,3 +9,4 @@
 | minecraft:wooden_pickaxe | 1789              | boxing_glove_half |       |
 | minecraft:jigsaw         | 1151              |                   |       | // Foul Sausage
 |                          | 1620              |                   |       | // Key
+| minecraft:carved_pumpkin | 1006              |                   |       | // Manpig Head
