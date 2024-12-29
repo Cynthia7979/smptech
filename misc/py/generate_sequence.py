@@ -37,18 +37,21 @@ class Explosion:
         return tag
 
 class Firework:
-    def __init__(self, x, y, z, lifetime: int, explosions: Iterable[Explosion]):
+    def __init__(self, x, y, z, lifetime: int, explosions: Iterable[Explosion], glowing: bool=False):
         # LifeTime is in ticks (1s = 20t)
         self.x, self.y, self.z = x, y, z
         assert lifetime > 0, f'Undefined lifetime {lifetime}.'
         self.lifetime = lifetime
         self.explosions = explosions
+        self.glowing = glowing
     
     def __repr__(self):
         command = 'summon minecraft:firework_rocket'
         command += f' {self.x} {self.y} {self.z}'
         command += ' {'
         command += f'LifeTime:{self.lifetime}'
+        if self.glowing:
+            command += ',Glowing:1b'
         if self.explosions:
             command += ',FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:['
             command += ','.join([repr(e) for e in self.explosions])
@@ -56,11 +59,11 @@ class Firework:
         command += '}'
         return command
 
-def hex_to_mcdec(hex: str):
-    assert len(hex) <= 6 and 'x' not in hex, 'Invalid hex string. Hex must be formatted RRGGBB and without any prefixes.'
-    return int(hex, 16)
+def hex_to_mcdec(hex_: str) -> int:
+    assert len(hex_) <= 6 and 'x' not in hex_, 'Invalid hex string. Hex must be formatted RRGGBB and without any prefixes.'
+    return int(hex_, 16)
 
-def rgb_to_mcdec(r: int, g: int, b: int):
+def rgb_to_mcdec(r: int, g: int, b: int) -> int:
     return int(hex(r)[2:].zfill(2)+hex(g)[2:].zfill(2)+hex(b)[2:].zfill(2), 16)
 
 def generate_mcfunctions(sequence: Iterable[Iterable[Firework]], mcfunctions_path: str, mcfunc_name: str, delays: Iterable[int], delay_unit: Literal['d', 's', 't'], offsets: Iterable[float, float, float]=(0,0,0)):
@@ -83,7 +86,7 @@ def generate_mcfunctions(sequence: Iterable[Iterable[Firework]], mcfunctions_pat
             f.write('\n'.join(frame_commands))
 
 def main():
-    test_explosion = Explosion('large_ball', trail=1, colors=[hex_to_mcdec('ff00ff')], fade_colors=[hex_to_mcdec('ffffff')])
+    test_explosion = Explosion('large_ball', trail=1, colors=[255], fade_colors=[hex_to_mcdec('ff0000')])
 
     ytaj_positioning = (
         (
@@ -103,8 +106,30 @@ def main():
             Firework(-99855, 169, -100030, 60, [test_explosion]),   # Main tower
         )
     )
+    generate_mcfunctions(ytaj_positioning, 'data/fireworks/functions/', 'ytaj', [2], 's')
 
-    generate_mcfunctions(ytaj_positioning, '../../data/fireworks/functions/', 'ytaj', [2], 's')
+    drabyel_pos = (
+        (
+            Firework(505, 67, 1850, 60, [test_explosion]),  # Drehmal Statue
+            Firework(507, 68, 1866, 60, [test_explosion]),  # Farm 1
+            Firework(497, 67, 1873, 60, [test_explosion]),  # Farm 2
+            Firework(510, 68, 1878, 60, [test_explosion]),  # Farm 3
+            Firework(491, 64, 1889, 60, [test_explosion]),  # Farm 4
+            Firework(530, 79, 1858, 30, [test_explosion]),  # Church of the Split Deities
+            Firework(496, 66, 1853, 60, [test_explosion]),  # Shore
+            Firework(516, 72, 1859, 30, [test_explosion]),  # Adventuring Merchant
+            Firework(519, 72, 1836, 30, [test_explosion]),  # Campfire
+            Firework(530, 70, 1879, 30, [test_explosion]),  # Well
+            Firework(522, 68, 1855, 30, [test_explosion]),  # Map
+            Firework(547, 76, 1843, 40, [test_explosion]),  # Inn
+            Firework(539, 72, 1844, 60, [test_explosion]),  # Inn lower
+            Firework(537, 70, 1838, 50, [test_explosion]),  # Marketplace 1
+            Firework(527, 70, 1828, 50, [test_explosion]),  # Marketplace 2
+            Firework(544, 70, 1834, 50, [test_explosion]),  # Marketplace 3
+            Firework(535, 67, 1831, 60, [test_explosion]),  # Marketplace center
+        ),
+    )
+    generate_mcfunctions(drabyel_pos, 'data/fireworks/functions/', 'drabyel', [2], 's')
 
 if __name__ == '__main__':
     main()

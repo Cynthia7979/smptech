@@ -1,0 +1,17 @@
+summon minecraft:firework_rocket 505 67 1850 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 507 68 1866 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 497 67 1873 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 510 68 1878 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 491 64 1889 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 530 79 1858 {LifeTime:30,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 496 66 1853 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 516 72 1859 {LifeTime:30,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 519 72 1836 {LifeTime:30,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 530 70 1879 {LifeTime:30,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 522 68 1855 {LifeTime:30,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 547 76 1843 {LifeTime:40,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 539 72 1844 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 537 70 1838 {LifeTime:50,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 527 70 1828 {LifeTime:50,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 544 70 1834 {LifeTime:50,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
+summon minecraft:firework_rocket 535 67 1831 {LifeTime:60,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:1,Trail:1b,Colors:[I;255],FadeColors:[I;16711680]}]}}}}
