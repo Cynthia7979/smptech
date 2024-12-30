@@ -1,0 +1,1 @@
+playsound block.note_block.bass master @a 530 68 1848 0.5 1.4142135623730951

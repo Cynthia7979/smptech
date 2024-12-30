@@ -1,0 +1,1 @@
+playsound block.note_block.snare master @a 530 68 1848 0.25 0.5

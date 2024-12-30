@@ -1,0 +1,3 @@
+summon minecraft:firework_rocket 528 77 1858 {LifeTime:15,Glowing:1b,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:0,Colors:[I;1075678],FadeColors:[I;15902776]}]}}}}
+summon minecraft:firework_rocket 532 77 1858 {LifeTime:15,Glowing:1b,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:0,Colors:[I;12852226],FadeColors:[I;15902776]}]}}}}
+schedule function fireworks:test_4 65t

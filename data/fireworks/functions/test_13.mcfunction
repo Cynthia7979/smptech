@@ -1,0 +1,1 @@
+summon minecraft:firework_rocket 522 68 1855 {LifeTime:20,FireworksItem:{id:"firework_rocket",Count:1,tag:{Fireworks:{Explosions:[{Type:3,Trail:1b,Colors:[I;1468724]},{Type:3,Flicker:1b,Colors:[I;15902776]},{Type:3,Trail:1b,Colors:[I;16777215]}]}}}}

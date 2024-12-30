@@ -1,0 +1,1 @@
+playsound block.note_block.pling master @a 530 68 1848 0.2 0.5297315471796477

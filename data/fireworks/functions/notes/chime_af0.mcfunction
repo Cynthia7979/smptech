@@ -1,0 +1,1 @@
+playsound block.note_block.chime master @a 530 68 1848 1 0.5612310241546865
