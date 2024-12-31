@@ -1,6 +1,7 @@
 import typing
 import os
 from collections.abc import Iterable
+from abc import ABC, abstractmethod
 from typing import Literal
 
 NAMESPACE = 'fireworks'
@@ -72,20 +73,52 @@ class Note:
         self.volume = volume
     
     def make_mcfunction(self, x: float, y: float, z: float, path: str):
-        command = f'playsound block.note_block.{self.instrument} master @a {x} {y} {z} {self.volume} {self.pitch}'
         os.makedirs(path, exist_ok=True)
-        with open(os.path.join(path, self.filename), 'w') as f:
-            f.write(command)
-
-    @property
-    def filename(self):
-        return f'{self.funcname}.mcfunction'
+        with open(os.path.join(path, f'{self.funcname}.mcfunction'), 'w') as f:
+            f.write(f'playsound block.note_block.{self.instrument} master @a {x} {y} {z} {self.volume} {self.pitch}')
 
     @property
     def funcname(self):
         return f'{self.instrument}_{self.note}'
 
-class PlayNote:
+class PlayABC(ABC):
+    @abstractmethod
+    def setup_func(self, play_at_x: float, play_at_y: float, play_at_z: float, path: str):
+        raise NotImplementedError('Cannot call setup_func on an abstract class.')
+
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError('Cannot call __repr__ on an abstract class.')
+
+class PlaySound(PlayABC):
+    def __init__(self, time: float, sound: str, pitch: float, volume: float=1):
+        assert '.' in sound, f'"{sound}" doesn\'t seem like a valid Minecraft sound.'
+        if time < 0:
+            raise ValueError('Again, your time is negative')
+        self.time = time
+        self.sound = sound
+        self.pitch = pitch
+        self.volume = volume
+        self.mcfunc_path = None
+    
+    def setup_func(self, play_at_x: float, play_at_y: float, play_at_z: float, path: str):
+        os.makedirs(path, exist_ok=True)
+        with open(os.path.join(path, f'{self.funcname}.mcfunction'), 'w') as f:
+            f.write(f'playsound {self.sound} master @a {play_at_x} {play_at_y} {play_at_z} {self.volume} {self.pitch}')
+        self.mcfunc_path = os.path.basename(path)
+    
+    @property
+    def funcname(self):
+        return f'{self.sound}_{str(self.pitch).strip("+-")}'
+
+    def __repr__(self):
+        if not self.mcfunc_path:
+            raise FileNotFoundError('Notes have not been initialized. Call setup_note_func')
+        if self.time < 0.05:  # Current tick
+            return f'function {NAMESPACE}:{self.mcfunc_path}/{self.funcname}'
+        return f'schedule function {NAMESPACE}:{self.mcfunc_path}/{self.funcname} {self.time}s append'
+
+class PlayNote(PlayABC):  # I really want to integrate Note with this but I just can't be bothered
     def __init__(self, time: float, note: Note):
         # Time is in seconds because music
         if time < 0:
@@ -94,9 +127,9 @@ class PlayNote:
         self.time = time
         self.mcfunc_path = None
     
-    def setup_note_func(self, play_at_x: float, play_at_y: float, play_at_z: float, path: str):
-        self.mcfunc_path = os.path.basename(path)
+    def setup_func(self, play_at_x: float, play_at_y: float, play_at_z: float, path: str):
         self.note.make_mcfunction(play_at_x, play_at_y, play_at_z, path)
+        self.mcfunc_path = os.path.basename(path)
 
     def __repr__(self):
         if not self.mcfunc_path:
@@ -168,10 +201,12 @@ def hex_to_mcdec(hex_: str) -> int:
 def rgb_to_mcdec(r: int, g: int, b: int) -> int:
     return int(hex(r)[2:].zfill(2)+hex(g)[2:].zfill(2)+hex(b)[2:].zfill(2), 16)
 
-def generate_fireworks(sequence: Iterable[Iterable[Firework]], mcfunctions_path: str, mcfunc_name: str, delays: Iterable[int], delay_unit: Literal['d', 's', 't'], offsets: Iterable[float, float, float]=(0,0,0)):
+def generate_fireworks(sequence: Iterable[Iterable[Firework]], mcfunctions_path: str, mcfunc_name: str, delays: Iterable[int], delay_unit: Literal['d', 's', 't'], offsets: Iterable[float, float, float]=(0,0,0), music_function_full_id: str=None):
     offset_x, offset_y, offset_z = offsets
     for ind, frame in enumerate(sequence):
-        frame_commands = []
+        frame_commands = ['# [Generated with cynthia7979/smptech -b datapack/nye-fireworks generate_sequence.py]']
+        if ind == 0 and music_function_full_id:
+            frame_commands.append(f'function {music_function_full_id}')
         for firework in frame:
             firework.x -= offset_x
             firework.y -= offset_y
@@ -189,14 +224,13 @@ def generate_fireworks(sequence: Iterable[Iterable[Firework]], mcfunctions_path:
                 frame_commands.append(f'schedule function {NAMESPACE}:{mcfunc_name}_{ind+1} {next_delay}{delay_unit}')
         with open(os.path.join(mcfunctions_path, function_name), 'w') as f:
             f.write('\n'.join(frame_commands))
-            if ind == 0:
-                f.write(f'\nfunction {NAMESPACE}:bgm_test')
 
 def generate_music(sequence: Iterable[PlayNote], mcfunctions_path: str, mcfunc_name: str, notes_path: str, play_at_x: float, play_at_y: float, play_at_z: float):
     notes_commands = []
     for sound in sequence:
-        sound.setup_note_func(play_at_x, play_at_y, play_at_z, notes_path)
+        sound.setup_func(play_at_x, play_at_y, play_at_z, notes_path)
         notes_commands.append(repr(sound))
+    os.makedirs(mcfunctions_path, exist_ok=True)
     with open(os.path.join(mcfunctions_path, f'{mcfunc_name}.mcfunction'), 'w') as f:
         f.write('\n'.join(notes_commands))
 
@@ -260,130 +294,133 @@ def main():
             Firework(0, 0, 0, 0, []),  # Initial delay
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])], True),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])], True),
+            Firework(526, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),
         ),
         (
-            Firework(530, 79, 1858, 20, [Explosion('small_ball', flicker=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('f2a838')])], True),  # d
+            Firework(530, 79, 1858, 30, [Explosion('large_ball', flicker=True, colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('f2a838')])], True),  # d
         ),
         (
-            Firework(528, 77, 1858, 15, [Explosion('small_ball', colors=[hex_to_mcdec('1069de')], fade_colors=[hex_to_mcdec('f2a838')])], True),  # v
-            Firework(532, 77, 1858, 15, [Explosion('small_ball', colors=[hex_to_mcdec('c41c02')], fade_colors=[hex_to_mcdec('f2a838')])], True),  # m
+            Firework(528, 77, 1858, 20, [Explosion('small_ball', colors=[hex_to_mcdec('1069de'), hex_to_mcdec('36bcf5'), hex_to_mcdec('173ba6')], fade_colors=[hex_to_mcdec('f2a838')])]),  # v
+            Firework(532, 77, 1858, 20, [Explosion('small_ball', colors=[hex_to_mcdec('c41c02'), hex_to_mcdec('a61111'), hex_to_mcdec('c70e24')], fade_colors=[hex_to_mcdec('f2a838')])]),  # m
         ),
         (
-            Firework(516, 72, 1859, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Adventuring Merchant
-            Firework(516, 72, 1859, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Adventuring Merchant
+            Firework(496, 66, 1853, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Shore
+            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Farm 2
+            Firework(516, 72, 1859, 30, [Explosion('star', trail=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('bd6904')])], True),  # Adventuring Merchant
+            Firework(516, 72, 1859, 15, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Adventuring Merchant
         ),
         (
-            Firework(519, 72, 1836, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Campfire
-            Firework(519, 72, 1836, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Campfire
+            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Gate tower 1
+            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Gate tower 2
+            Firework(519, 72, 1836, 30, [Explosion('star', trail=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('bd6904')])], True),  # Campfire
+            Firework(519, 72, 1836, 15, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Campfire
         ),
         (
-            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 1
-            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 2
-            Firework(510, 68, 1878, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 3
-            Firework(491, 64, 1889, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 4
-            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 1
-            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 2
-            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Stable
-            Firework(496, 66, 1853, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Shore
-            Firework(496, 66, 1853, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Shore
+            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Stable
+            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Farm 1
+            Firework(496, 66, 1853, 30, [Explosion('star', trail=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('bd6904')])]),  # Shore
+            Firework(496, 66, 1853, 15, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Shore
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
+            Firework(526, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(533, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
         ),
         (
-            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn
-            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Flowerpot hut
-            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Library
-            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Outside cemetary
-            Firework(539, 72, 1844, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn lower
-            Firework(539, 72, 1844, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Inn lower
-            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 1
-            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 2
-            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 3
-            Firework(535, 67, 1831, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace Center
-            Firework(535, 67, 1831, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Marketplace Center
+            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Inn
+            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Flowerpot hut
+            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Library
+            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Outside cemetary
+            Firework(539, 72, 1844, 30, [Explosion('large_ball', colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('bd6904')])]),  # Inn lower
+            Firework(539, 72, 1844, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Inn lower
+            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Marketplace 1
+            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Marketplace 2
+            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('5c9aff')])]),  # Marketplace 3
+            Firework(535, 67, 1831, 30, [Explosion('star', colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('bd6904')])]),  # Marketplace Center
+            Firework(535, 67, 1831, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Marketplace Center
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
+            Firework(526, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(533, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 1
-            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 2
-            Firework(510, 68, 1878, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 3
-            Firework(491, 64, 1889, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 4
-            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 1
-            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 2
-            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Stable
-            Firework(539, 72, 1844, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn lower
-            Firework(539, 72, 1844, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Inn lower
-            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn
-            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Flowerpot hut
-            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Library
-            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Outside cemetary
-            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 1
-            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 2
-            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 3
-            Firework(535, 67, 1831, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace Center
-            Firework(535, 67, 1831, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Marketplace Center
-            Firework(496, 66, 1853, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Shore
-            Firework(496, 66, 1853, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Shore
+            Firework(526, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(533, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934'), hex_to_mcdec('42e352')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 1
+            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 2
+            Firework(510, 68, 1878, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 3
+            Firework(491, 64, 1889, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 4
+            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 1
+            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 2
+            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Stable
+            Firework(539, 72, 1844, 30, [Explosion('large_ball', colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn lower
+            Firework(539, 72, 1844, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e'), hex_to_mcdec('173ba6')])]),  # Inn lower
+            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn
+            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Flowerpot hut
+            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Library
+            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Outside cemetary
+            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 1
+            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 2
+            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('fae76e')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 3
+            Firework(535, 67, 1831, 30, [Explosion('large_ball', trail=True, colors=[hex_to_mcdec('6f46b3'), hex_to_mcdec('f2248b')], fade_colors=[hex_to_mcdec('c15adb')])]),  # Marketplace Center
+            Firework(535, 67, 1831, 15, [Explosion('burst', colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Marketplace Center
+            Firework(496, 66, 1853, 30, [Explosion('large_ball', trail=True, colors=[hex_to_mcdec('118a29')], fade_colors=[hex_to_mcdec('c1f5cb'), hex_to_mcdec('daf5df')])]),  # Shore
+            Firework(496, 66, 1853, 15, [Explosion('burst', colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Shore
+            Firework(519, 72, 1836, 50, [Explosion('small_ball', colors=[hex_to_mcdec('8a0899')])]),  # Campfire
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 1
-            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 2
-            Firework(510, 68, 1878, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 3
-            Firework(491, 64, 1889, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 4
-            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 1
-            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 2
-            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Stable
-            Firework(539, 72, 1844, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn lower
-            Firework(539, 72, 1844, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Inn lower
-            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn
-            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Flowerpot hut
-            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Library
-            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Outside cemetary
-            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 1
-            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 2
-            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 3
-            Firework(535, 67, 1831, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace Center
-            Firework(535, 67, 1831, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Marketplace Center
-            Firework(496, 66, 1853, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Shore
-            Firework(496, 66, 1853, 15, [Explosion('burst', trail=True, colors=[hex_to_mcdec('1069de')])]),  # Shore
+            # Firework(526, 78, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            # Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),
+            Firework(507, 68, 1866, 30, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),  # Farm 1
+            Firework(497, 67, 1873, 30, [Explosion('burst', colors=[hex_to_mcdec('781106')])]),  # Farm 2
+            Firework(510, 68, 1878, 30, [Explosion('burst', colors=[hex_to_mcdec('fae76e')])]),  # Farm 3
+            Firework(491, 64, 1889, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('166934')])]),  # Farm 4
+            Firework(512, 73, 1817, 30, [Explosion('burst', colors=[hex_to_mcdec('fae76e')])]),  # Gate tower 1
+            Firework(500, 73, 1818, 30, [Explosion('burst', colors=[hex_to_mcdec('fae76e')])]),  # Gate tower 2
+            Firework(502, 72, 1843, 30, [Explosion('burst', colors=[hex_to_mcdec('781106')])]),  # Stable
+            # Firework(539, 72, 1844, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn lower
+            Firework(539, 72, 1844, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6'), hex_to_mcdec('fae76e')])]),  # Inn lower
+            Firework(547, 76, 1843, 30, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),  # Inn
+            Firework(562, 70, 1860, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('781106')])]),  # Flowerpot hut
+            Firework(568, 74, 1844, 30, [Explosion('burst', colors=[hex_to_mcdec('781106')])]),  # Library
+            Firework(551, 65, 1869, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('fae76e')])]),  # Outside cemetary
+            Firework(537, 70, 1838, 30, [Explosion('burst', colors=[hex_to_mcdec('fae76e')])]),  # Marketplace 1
+            Firework(527, 70, 1828, 30, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),  # Marketplace 2
+            Firework(544, 70, 1834, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('166934')])]),  # Marketplace 3
+            # Firework(535, 67, 1831, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace Center
+            Firework(535, 67, 1831, 30, [Explosion('burst', colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Marketplace Center
+            # Firework(496, 66, 1853, 30, [Explosion('star', flicker=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('a16100')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Shore
+            Firework(496, 66, 1853, 30, [Explosion('burst', colors=[hex_to_mcdec('1069de'), hex_to_mcdec('173ba6')])]),  # Shore
+            Firework(519, 72, 1836, 45, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('fae76e')])]),  # Campfire
+            Firework(486, 86, 1879, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('166934')])]),  # Farm tree 1
+            Firework(520, 83, 1896, 30, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('166934')])]),  # Farm/church tree
+            # Firework(522, 68, 1855, 15, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('8a0899')]), Explosion('creeper', colors=[hex_to_mcdec('8a0899')]), Explosion('creeper', colors=[hex_to_mcdec('4624bf')]), Explosion('creeper', colors=[hex_to_mcdec('9c0852')], fade_colors=[hex_to_mcdec('c15adb')])]),  # Map
+            # Firework(530, 70, 1848, 15, [Explosion('small_ball', trail=True, colors=[hex_to_mcdec('bd6904')]), Explosion('creeper', colors=[hex_to_mcdec('f2a838')]), Explosion('creeper', colors=[hex_to_mcdec('ffc400')]), Explosion('creeper', colors=[hex_to_mcdec('bd6904')], fade_colors=[hex_to_mcdec('fcf49a')])]),  # Well
+            Firework(522, 68, 1855, 45, [Explosion('large_ball', trail=True, colors=[hex_to_mcdec('8a0899'), hex_to_mcdec('9c0852')], fade_colors=[hex_to_mcdec('c15adb')]), Explosion('creeper', colors=[hex_to_mcdec('9c0852')], fade_colors=[hex_to_mcdec('c15adb')])]),  # Map
+            Firework(522, 68, 1855, 30, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('4624bf')])]),  # Map
+            Firework(530, 70, 1848, 45, [Explosion('large_ball', trail=True, colors=[hex_to_mcdec('f2a838'), hex_to_mcdec('bd6904')], fade_colors=[hex_to_mcdec('ffc400')]), Explosion('creeper', colors=[hex_to_mcdec('bd6904')], fade_colors=[hex_to_mcdec('fcf49a')])]),  # Well
+            Firework(530, 70, 1848, 30, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('bd6904')])]),  # Well
+            Firework(507, 69, 1850, 45, [Explosion('creeper', trail=True, colors=[hex_to_mcdec('166934')]), Explosion('creeper', colors=[hex_to_mcdec('40ffb6'), hex_to_mcdec('c1f5cb'), hex_to_mcdec('daf5df')]), Explosion('large_ball', colors=[hex_to_mcdec('118a29')], fade_colors=[hex_to_mcdec('c1f5cb'), hex_to_mcdec('daf5df')])], True),  # Drehmal Statue
+            Firework(511, 68, 1850, 30, [Explosion('burst', flicker=True, colors=[hex_to_mcdec('166934'), hex_to_mcdec('c1f5cb'), hex_to_mcdec('daf5df')])]),  # Drehmal Statue lower
         ),
         (
-            Firework(526, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(533, 76, 1859, 0, [Explosion('burst', colors=[hex_to_mcdec('166934')])]),
-            Firework(507, 68, 1866, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 1
-            Firework(497, 67, 1873, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 2
-            Firework(510, 68, 1878, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 3
-            Firework(491, 64, 1889, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Farm 4
-            Firework(512, 73, 1817, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 1
-            Firework(500, 73, 1818, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Gate tower 2
-            Firework(502, 72, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Stable
-            Firework(547, 76, 1843, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Inn
-            Firework(562, 70, 1860, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Flowerpot hut
-            Firework(568, 74, 1844, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Library
-            Firework(551, 65, 1869, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Outside cemetary
-            Firework(537, 70, 1838, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 1
-            Firework(527, 70, 1828, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 2
-            Firework(544, 70, 1834, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace 3
-            Firework(535, 67, 1831, 30, [Explosion('burst', trail=True, colors=[hex_to_mcdec('166934')], fade_colors=[hex_to_mcdec('ffffff')])]),  # Marketplace center
-            Firework(522, 68, 1855, 20, [Explosion('creeper', trail=True, colors=[hex_to_mcdec('166934')]), Explosion('creeper', flicker=True, colors=[hex_to_mcdec('f2a838')]), Explosion('creeper', trail=True, colors=[hex_to_mcdec('ffffff')])]),  # Map
-            Firework(530, 70, 1848, 20, [Explosion('creeper', trail=True, colors=[hex_to_mcdec('166934')]), Explosion('creeper', flicker=True, colors=[hex_to_mcdec('f2a838')]), Explosion('creeper', trail=True, colors=[hex_to_mcdec('ffffff')])]),  # Well
-            Firework(507, 69, 1850, 30, [Explosion('creeper', trail=True, colors=[hex_to_mcdec('166934')]), Explosion('creeper', flicker=True, colors=[hex_to_mcdec('f2a838')]), Explosion('creeper', trail=True, colors=[hex_to_mcdec('ffffff')])]),  # Drehmal Statue
+            Firework(497, 67, 1873, 55, [Explosion('large_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(500, 73, 1818, 50, [Explosion('star', colors=[hex_to_mcdec('fae76e')])]),
+            Firework(562, 70, 1860, 50, [Explosion('large_ball', colors=[hex_to_mcdec('781106')])]),
+            Firework(551, 65, 1869, 60, [Explosion('small_ball', colors=[hex_to_mcdec('fae76e')])]),
+            Firework(544, 70, 1834, 55, [Explosion('small_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(496, 66, 1853, 65, [Explosion('small_ball', colors=[hex_to_mcdec('fae76e')])]),
+            Firework(537, 70, 1838, 65, [Explosion('small_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(507, 68, 1866, 60, [Explosion('large_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(544, 70, 1834, 65, [Explosion('small_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(496, 66, 1853, 55, [Explosion('large_ball', colors=[hex_to_mcdec('fae76e')])]),
+            Firework(537, 70, 1838, 60, [Explosion('small_ball', colors=[hex_to_mcdec('166934')])]),
+            Firework(507, 68, 1866, 70, [Explosion('creeper', flicker=True, colors=[hex_to_mcdec('166934')])]),
         ),
     )
-    generate_fireworks(d1, 'data/fireworks/functions/', 'test', [30, 10, 5, 65, 75, 80, 40, 30, 10, 30, 10, 20, 20, 20, 20, 20], 't')
+    generate_fireworks(d1, 'data/fireworks/functions/', 'drabyel', [35, 10, 10, 50, 80, 85, 40, 30, 10, 30, 30, 5], 't', music_function_full_id='fireworks:bgm/drehmal_theme')
     
-    bgm = (
+    theme = [
         PlayNote(0, Note('chime', 'c1')),
         PlayNote(0.5, Note('chime', 'ef1')),
         PlayNote(4, Note('chime', 'bf0')),
@@ -436,8 +473,17 @@ def main():
         PlayNote(22, Note('bell', 'c1')),
         PlayNote(22, Note('pling', 'c2')),
         PlayNote(22, Note('pling', 'c1')),
-    )
-    generate_music(bgm, 'data/fireworks/functions', 'bgm_test', 'data/fireworks/functions/notes', 530, 68, 1848)
+        PlaySound(22.35, 'block.amethyst_block.step', 1),
+        PlaySound(22.5, 'block.amethyst_block.chime', 0.9),
+        PlaySound(22.35, 'block.amethyst_block.chime', 0.9),
+        PlaySound(22.6, 'block.amethyst_block.chime', 1.5),
+        PlaySound(22.75, 'block.amethyst_block.chime', 1.5),
+        PlaySound(22.75, 'block.amethyst_block.step', 1),
+        PlaySound(23, 'block.amethyst_block.chime', 2),
+        PlaySound(23.25, 'block.amethyst_block.chime', 2),
+        PlaySound(23, 'block.amethyst_block.step', 1),
+    ]
+    generate_music(theme, 'data/fireworks/functions/bgm', 'drehmal_theme', 'data/fireworks/functions/notes', 530, 68, 1848)
 
 if __name__ == '__main__':
     main()

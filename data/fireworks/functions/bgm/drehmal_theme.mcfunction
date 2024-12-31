@@ -44,3 +44,12 @@ schedule function fireworks:notes/bell_c2 22s append
 schedule function fireworks:notes/bell_c1 22s append
 schedule function fireworks:notes/pling_c2 22s append
 schedule function fireworks:notes/pling_c1 22s append
+schedule function fireworks:notes/block.amethyst_block.step_1 22.35s append
+schedule function fireworks:notes/block.amethyst_block.chime_0.9 22.5s append
+schedule function fireworks:notes/block.amethyst_block.chime_0.9 22.35s append
+schedule function fireworks:notes/block.amethyst_block.chime_1.5 22.6s append
+schedule function fireworks:notes/block.amethyst_block.chime_1.5 22.75s append
+schedule function fireworks:notes/block.amethyst_block.step_1 22.75s append
+schedule function fireworks:notes/block.amethyst_block.chime_2 23s append
+schedule function fireworks:notes/block.amethyst_block.chime_2 23.25s append
+schedule function fireworks:notes/block.amethyst_block.step_1 23s append

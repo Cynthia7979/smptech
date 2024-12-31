@@ -1,0 +1,2 @@
+title @a[x=533,y=74,z=1836,distance=..100] title [{"text":"60 ","color":"green"},{"text":"seconds until ","color":"dark_green"},{"text":"2025","color":"green"}]
+schedule function fireworks:prod/countdown_5 55s
