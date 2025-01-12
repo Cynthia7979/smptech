@@ -1,6 +1,5 @@
 function uhc:border/setup
 function uhc:give_recipes
-function uhc:triggers/enable_all
 function uhc:time/begin
 function uhc:add_players_to_scoreboards
 scoreboard players set #match_started uhc_timer 1
