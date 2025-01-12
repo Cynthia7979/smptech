@@ -1,0 +1,1 @@
+tag @s remove uhc_allow_tp_countdown

@@ -1,6 +1,7 @@
 tellraw @a "[Av'UHC] Hello"
 
 scoreboard objectives add uhc_timer dummy
+scoreboard objectives add uhc_allow_tp_countdown dummy
 
 scoreboard objectives add uhc_kills playerKillCount "Kills"
 scoreboard players add @a uhc_kills 0

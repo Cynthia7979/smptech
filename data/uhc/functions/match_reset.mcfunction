@@ -9,6 +9,8 @@ schedule clear uhc:match_start_4
 function uhc:rng/init
 scoreboard players set @a uhc_kills 0
 scoreboard players set @a uhc_death 0
+scoreboard players set @a uhc_allow_tp_countdown -1
+tag @a remove uhc_dead
 scoreboard players set #match_started uhc_timer 0
 
 # Make it so Drehmal doesn't auto-teleport players from the world spawn to default map spawn
