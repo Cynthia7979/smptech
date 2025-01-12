@@ -1,0 +1,1 @@
+scoreboard players set #match_started uhc_timer 0

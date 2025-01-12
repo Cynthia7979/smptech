@@ -27,4 +27,6 @@ scoreboard players enable @a uhc_tp_sahd
 scoreboard players enable @a uhc_tp_south_tharxax
 scoreboard players enable @a uhc_tp_spearhead_forest
 scoreboard players enable @a uhc_tp_veruhkt_plateau
-scoreboard players enable @a uhc_tp_yavhlix
+# scoreboard players enable @a uhc_tp_yavhlix
+
+scoreboard players enable @a[gamemode=spectator] uhc_menu

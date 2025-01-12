@@ -1,14 +1,21 @@
-say Hello
+tellraw @a "[Av'UHC] Hello"
 
 scoreboard objectives add uhc_timer dummy
+
 scoreboard objectives add uhc_kills playerKillCount "Kills"
 scoreboard players add @a uhc_kills 0
 scoreboard objectives setdisplay sidebar uhc_kills
+
 scoreboard objectives add uhc_hp health "HP"
 scoreboard players add @a uhc_hp 0
 scoreboard objectives modify uhc_hp rendertype hearts
 scoreboard objectives setdisplay belowName uhc_hp
 scoreboard objectives setdisplay list uhc_hp
 
-function uhc:triggers/add_objectives
-function uhc:triggers/enable_all
+scoreboard objectives add uhc_death deathCount
+scoreboard players set @a uhc_death 0
+
+worldborder damage amount 0
+
+function uhc:triggers/add_triggers
+function uhc:rng/init

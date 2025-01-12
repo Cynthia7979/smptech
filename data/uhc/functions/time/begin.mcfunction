@@ -1,0 +1,7 @@
+scoreboard players set hours uhc_timer 0
+scoreboard players set minutes uhc_timer 0
+scoreboard players set seconds uhc_timer 0
+
+schedule function uhc:time/hour 3600s
+schedule function uhc:time/min 60s
+schedule function uhc:time/sec 1s

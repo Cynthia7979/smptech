@@ -27,4 +27,6 @@ scoreboard objectives add uhc_tp_sahd trigger
 scoreboard objectives add uhc_tp_south_tharxax trigger
 scoreboard objectives add uhc_tp_spearhead_forest trigger
 scoreboard objectives add uhc_tp_veruhkt_plateau trigger
-scoreboard objectives add uhc_tp_yavhlix trigger
+# scoreboard objectives add uhc_tp_yavhlix trigger
+
+scoreboard objectives add uhc_menu trigger
