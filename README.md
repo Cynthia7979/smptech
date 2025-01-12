@@ -1,6 +1,6 @@
 # UHC in Drehmal
 
-Mostly implemented by me, with the RNG (LCG) module taken from [Cloud Wolf](https://cloudwolfyt.github.io/pages/downloads/list.html).
+Mostly implemented by me, with the RNG (LCG) module taken from [Cloud Wolf](https://cloudwolfyt.github.io/pages/downloads/list.html) and "deathpoint" module based on [LastDeathTP by codefox_](https://www.planetminecraft.com/data-pack/last-death-tp/)
 
 Key adjustable things:
 
