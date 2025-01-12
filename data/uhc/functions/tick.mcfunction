@@ -7,4 +7,4 @@ execute if score #match_started uhc_timer matches 1 run function uhc:triggers/en
 execute store result score #border_size uhc_math run worldborder get
 scoreboard players operation CurrentBorderSize: uhc_kills = #border_size uhc_math
 
-gamemode spectator @a[tag=dead,gamemode=!spectator]
+gamemode spectator @a[tag=uhc_dead,gamemode=!spectator]

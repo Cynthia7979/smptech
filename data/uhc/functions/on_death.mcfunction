@@ -1,6 +1,6 @@
 # Run as player who died
 execute at @a run playsound entity.ender_dragon.growl master @s ~ ~ ~
-tag @s add dead
+tag @s add uhc_dead
 spawnpoint
 gamemode spectator
 scoreboard players reset @s uhc_hp
