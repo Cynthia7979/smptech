@@ -1,11 +1,11 @@
 # Run as player who died
 effect clear
 
-tag @s add deathpoint_just_died
-schedule function uhc:deathpoint/return_to_deathpoint 2t
+# tag @s add deathpoint_just_died
+# schedule function uhc:deathpoint/return_to_deathpoint 2t
 
 tag @s add uhc_dead
-scoreboard players set @s uhc_death_gamemode_cooldown 4
+# scoreboard players set @s uhc_death_gamemode_cooldown 4
 scoreboard players set @s uhc_death 0
 scoreboard players set @s uhc_allow_tp_countdown -2
 

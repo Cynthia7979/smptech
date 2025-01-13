@@ -26,4 +26,4 @@ worldborder damage amount 0
 
 function uhc:triggers/add_triggers
 function uhc:rng/init
-function uhc:deathpoint/init
+# function uhc:deathpoint/init
