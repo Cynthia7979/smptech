@@ -4,8 +4,8 @@ execute unless score #lcg uhc_math matches ..0 unless score #lcg uhc_math matche
 
 scoreboard objectives add uhc_utils dummy
 
-data modify storage uhc:uhc towers set value ["akhlo'rohma","anyr'nogur","av'sal","black jungle","capital valley","carmine","casai","dusk","dawn","ebonfire","ebony veldt","faehrcyle","frozen bite","grand pike","gulf","heartwood","hell","highfall","lorahn'kahl","mael's","merijool","nimahj","north tharxax","palisades","purity peaks","sahd","south tharxax","spearhead","veruhkt"]
-# data modify storage uhc:uhc towers set value ["akhlo'rohma","anyr'nogur","av'sal","capital valley","carmine","casai","ebonfire","ebony veldt","grand pike","gulf","heartwood","highfall","lorahn'kahl","mael's","merijool","nimahj","north tharxax","palisades","purity peaks","south tharxax","spearhead","veruhkt"]
+# data modify storage uhc:uhc towers set value ["akhlo'rohma","anyr'nogur","av'sal","black jungle","capital valley","carmine","casai","dusk","dawn","ebonfire","ebony veldt","faehrcyle","frozen bite","grand pike","gulf","heartwood","hell","highfall","lorahn'kahl","mael's","merijool","nimahj","north tharxax","palisades","purity peaks","sahd","south tharxax","spearhead","veruhkt"]
+data modify storage uhc:uhc towers set value ["akhlo'rohma","anyr'nogur","av'sal","capital valley","carmine","casai","ebonfire","ebony veldt","grand pike","gulf","heartwood", "lorahn'kahl","mael's","merijool","nimahj","north tharxax","palisades","purity peaks","south tharxax","spearhead","veruhkt"]
 data modify storage uhc:uhc towers_shuffled set value []
 
 scoreboard objectives add uhc_comp dummy
