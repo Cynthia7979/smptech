@@ -1,0 +1,1 @@
+setblock 5000 200 5000 air

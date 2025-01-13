@@ -1,14 +1,15 @@
 # Run as player who died
-execute at @a run playsound entity.ender_dragon.growl master @s ~ ~ ~
+effect clear
 
-execute as @s at @s run function uhc:deathpoint/mark_deathpoint
-tag @s add deathpoint_waiting_for_tp
-schedule function uhc:deathpoint/initiate_deathpoint_tp 3s
+tag @s add deathpoint_just_died
+schedule function uhc:deathpoint/return_to_deathpoint 2t
 
 tag @s add uhc_dead
-gamemode spectator
+scoreboard players set @s uhc_death_gamemode_cooldown 4
 scoreboard players set @s uhc_death 0
 scoreboard players set @s uhc_allow_tp_countdown -2
+
+execute at @a run playsound entity.ender_dragon.growl master @s ~ ~ ~
 
 title @s title {"text":"You died!","color":"dark_red"}
 title @s subtitle {"text":"You may now spectate the game from Nothingness","color":"dark_gray"}

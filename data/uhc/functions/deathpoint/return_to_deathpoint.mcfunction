@@ -1,0 +1,1 @@
+execute as @a[tag=deathpoint_just_died] run function uhc:deathpoint/different_approach
