@@ -4,3 +4,4 @@ execute store result score #num_players uhc_utils if entity @a[gamemode=!spectat
 title @a subtitle [{"score":{"name":"#num_players","objective":"uhc_utils"}},{"text":" players remaining","color":"gray"}]
 spreadplayers 793.61 614.56 10 25 false @a[gamemode=!spectator]
 tp @a[gamemode=spectator] 793.61 76 614.56
+worldborder set 50
