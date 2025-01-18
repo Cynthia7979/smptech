@@ -1,13 +1,16 @@
 schedule clear uhc:time/hour
 schedule clear uhc:time/min
 schedule clear uhc:time/sec
-schedule clear uhc:match_start_1
-schedule clear uhc:match_start_2
-schedule clear uhc:match_start_3
-schedule clear uhc:match_start_4
+schedule clear uhc:sequences/match_start/match_start_1
+schedule clear uhc:sequences/match_start/match_start_2
+schedule clear uhc:sequences/match_start/match_start_3
+schedule clear uhc:sequences/match_start/match_start_4
 
 function uhc:rng/init
 scoreboard players set #match_started uhc_timer 0
+scoreboard players set #tower_disabled uhc_config 0
+scoreboard players set #basic_start_confirmed uhc_config 0
+scoreboard players set #started_in_basic_mode uhc_config 0
 
 scoreboard players set @a uhc_kills 0
 scoreboard players set @a uhc_death 0

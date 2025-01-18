@@ -1,2 +1,2 @@
 execute positioned 26520 178 -137 unless entity @p[gamemode=!spectator,distance=..50] run tellraw @a "[Av'UHC] No players are in the start game zone! Match is not started."
-execute positioned 26520 178 -137 if entity @p[gamemode=!spectator,distance=..50] run function uhc:match_start_1
+execute positioned 26520 178 -137 if entity @p[gamemode=!spectator,distance=..50] run function uhc:sequences/match_start/match_start_1

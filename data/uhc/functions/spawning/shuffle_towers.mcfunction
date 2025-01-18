@@ -6,4 +6,4 @@ function uhc:rng/range
 scoreboard players operation tower_index uhc_utils = out uhc_math
 function uhc:rng/move_tower_to_shuffled_at_index
 # Loop until no towers left
-execute unless score max uhc_math matches ..1 run function uhc:rng/shuffle_towers
+execute unless score max uhc_math matches ..1 run function uhc:spawning/shuffle_towers

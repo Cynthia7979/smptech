@@ -1,9 +1,15 @@
 tellraw @a "[Av'UHC] Hello"
 
 scoreboard objectives add uhc_timer dummy
+scoreboard players add #match_started uhc_timer 0
+
 scoreboard objectives add uhc_allow_tp_countdown dummy
 scoreboard objectives add uhc_death_gamemode_cooldown dummy
+
 scoreboard objectives add uhc_config dummy
+scoreboard players add #tower_disabled uhc_config 0
+scoreboard players add #basic_start_confirmed uhc_config 0
+scoreboard players add #started_in_basic_mode uhc_config 0
 
 scoreboard objectives add uhc_kills playerKillCount "Kills"
 scoreboard players add @a uhc_kills 0
